@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Web Benchmarks Index</title>
+  <meta name="description" content="一頁收齊 WebGL/WebGPU/JS/WASM/AI benchmark 與工具連結，支援 ?go=slug 直接跳轉。" />
+  <style>
+    :root {
+      --bg: #0b0d10;
+      --panel: #12151a;
+      --panel2: #0f1216;
+      --text: #e6e8ee;
+      --muted: #a9b0bd;
+      --border: rgba(255,255,255,.10);
+      --accent: #7aa2ff;
+      --ok: #4ade80;
+      --warn: #fbbf24;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", Arial, sans-serif;
+      background: radial-gradient(1200px 800px at 20% 0%, rgba(122,162,255,.18), transparent 60%),
+                  radial-gradient(900px 700px at 95% 20%, rgba(74,222,128,.12), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    a { color: inherit; text-decoration: none; }
+    header {
+      position: sticky; top: 0; z-index: 10;
+      backdrop-filter: blur(10px);
+      background: rgba(11,13,16,.78);
+      border-bottom: 1px solid var(--border);
+    }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 18px 16px; }
+    .title {
+      display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+    }
+    h1 { margin: 0; font-size: 20px; letter-spacing: .2px; }
+    .sub { margin-top: 6px; color: var(--muted); font-size: 13px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 12px;
+      padding: 16px 16px 28px;
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+    .controls {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr 260px;
+      gap: 12px;
+    }
+    @media (max-width: 860px) {
+      .controls { grid-template-columns: 1fr; }
+    }
+    .input, .select {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: rgba(18,21,26,.9);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 12px 12px;
+      font-size: 14px;
+      outline: none;
+    }
+    .input:focus, .select:focus { border-color: rgba(122,162,255,.55); box-shadow: 0 0 0 3px rgba(122,162,255,.12); }
+    .note {
+      grid-column: 1 / -1;
+      border: 1px dashed rgba(255,255,255,.18);
+      background: rgba(15,18,22,.65);
+      border-radius: 16px;
+      padding: 12px 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .note code {
+      background: rgba(255,255,255,.06);
+      padding: 2px 6px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.10);
+      color: var(--text);
+    }
+    .cards {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 12px;
+    }
+    .card {
+      grid-column: span 6;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(18,21,26,.9), rgba(15,18,22,.92));
+      border-radius: 18px;
+      padding: 14px 14px 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.18);
+      transition: transform .12s ease, border-color .12s ease;
+    }
+    .card:hover { transform: translateY(-1px); border-color: rgba(122,162,255,.35); }
+    @media (max-width: 860px) { .card { grid-column: span 12; } }
+    .row {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+    }
+    .name { font-weight: 650; font-size: 15px; margin: 0; }
+    .meta { margin-top: 6px; color: var(--muted); font-size: 12px; }
+    .badges { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .badge {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      user-select: none;
+    }
+    .badge.cat { border-color: rgba(122,162,255,.35); background: rgba(122,162,255,.10); }
+    .actions {
+      margin-top: 12px;
+      display: flex; flex-wrap: wrap;
+      gap: 8px;
+    }
+    button {
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    button.primary {
+      border-color: rgba(122,162,255,.55);
+      background: rgba(122,162,255,.14);
+    }
+    button:hover { border-color: rgba(255,255,255,.25); }
+    .toast {
+      position: fixed; left: 50%; bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(18,21,26,.92);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--text);
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      display: none;
+      max-width: min(560px, calc(100% - 24px));
+    }
+    footer {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 16px 22px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    footer a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="title">
+        <h1>Web Benchmarks Index</h1>
+        <div style="color: var(--muted); font-size: 12px;">支援 <code>?go=slug</code> / <code>#slug</code> 直接跳轉</div>
+      </div>
+      <div class="sub">把你常用的 WebGL / WebGPU / JS / WASM / AI benchmark 集中在一頁，並提供「可分享的直接跳轉連結」。</div>
+    </div>
+  </header>
+
+  <main class="grid">
+    <section class="controls">
+      <input id="q" class="input" placeholder="搜尋：名稱 / 網域 / tag（例如 webgpu、wasm、youtube）" autocomplete="off" />
+      <select id="cat" class="select">
+        <option value="">全部分類</option>
+      </select>
+    </section>
+
+    <section class="note" id="note">
+      <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+        <div>📌 直接跳轉方式：</div>
+        <div><code>?go=slug</code> 例如 <code>?go=browserleaks-com-webgl</code></div>
+        <div>或用 <code>#slug</code> 例如 <code>#browserleaks-com-webgl</code></div>
+      </div>
+      <div style="margin-top:8px; color: var(--muted);">
+        你也可以在每張卡片按「複製跳轉連結」，把連結丟給 QA / 同事，點進去就會自動導到目標頁面。
+      </div>
+    </section>
+
+    <section class="cards" id="cards" aria-live="polite"></section>
+  </main>
+
+  <footer>
+    <div>Made for GitHub Pages. 檔案是純靜態（HTML/CSS/JS），不需要後端。</div>
+    <div style="margin-top:6px;">提示：若你未來要新增/移除連結，只要改 <code>assets/data.js</code> 內的清單即可。</div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="assets/data.js"></script>
+  <script>
+    const $ = (sel) => document.querySelector(sel);
+    const cardsEl = $("#cards");
+    const qEl = $("#q");
+    const catEl = $("#cat");
+    const toastEl = $("#toast");
+
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.style.display = "block";
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => toastEl.style.display = "none", 1400);
+    }
+
+    function originPath() {
+      // Keep it robust for GitHub Pages subpaths
+      return window.location.origin + window.location.pathname;
+    }
+
+    function buildDirectLink(slug) {
+      const base = originPath();
+      return base + "?go=" + encodeURIComponent(slug);
+    }
+
+    function hostOf(url) {
+      try { return new URL(url).host; } catch (_) { return ""; }
+    }
+
+    function normalize(s) {
+      return (s ?? "").toString().trim().toLowerCase();
+    }
+
+    function matches(item, q, cat) {
+      if (cat && item.category !== cat) return false;
+      if (!q) return true;
+      const hay = [
+        item.title,
+        item.url,
+        item.category,
+        ...(item.tags || []),
+        item.slug
+      ].map(normalize).join(" ");
+      return hay.includes(q);
+    }
+
+    function render(list) {
+      if (!list.length) {
+        cardsEl.innerHTML = "<div style='grid-column:1/-1; color: var(--muted); padding: 10px 2px;'>找不到符合的項目。</div>";
+        return;
+      }
+      cardsEl.innerHTML = list.map((it) => {
+        const host = hostOf(it.url);
+        const tags = (it.tags || []).map(t => `<span class="badge">${t}</span>`).join("");
+        return `
+          <article class="card" data-slug="${it.slug}">
+            <div class="row">
+              <div>
+                <h3 class="name">${it.title}</h3>
+                <div class="meta">${host} · <span class="badge cat">${it.category}</span></div>
+              </div>
+            </div>
+            <div class="badges">${tags}</div>
+            <div class="actions">
+              <button class="primary" data-act="open" data-url="${it.url}">開啟</button>
+              <button data-act="copy" data-slug="${it.slug}">複製跳轉連結</button>
+              <button data-act="copy-url" data-url="${it.url}">複製原始 URL</button>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function refresh() {
+      const q = normalize(qEl.value);
+      const cat = catEl.value;
+      const filtered = BENCHMARKS.filter(it => matches(it, q, cat));
+      render(filtered);
+    }
+
+    function setupCategories() {
+      const cats = Array.from(new Set(BENCHMARKS.map(b => b.category))).sort();
+      for (const c of cats) {
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        catEl.appendChild(opt);
+      }
+    }
+
+    async function copyText(t) {
+      try {
+        await navigator.clipboard.writeText(t);
+        return true;
+      } catch (e) {
+        // fallback
+        const ta = document.createElement("textarea");
+        ta.value = t;
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        return ok;
+      }
+    }
+
+    function goToSlug(slug) {
+      const it = BENCHMARKS.find(b => b.slug === slug);
+      if (!it) return false;
+      window.location.replace(it.url);
+      return true;
+    }
+
+    function tryAutoRedirect() {
+      const sp = new URLSearchParams(window.location.search);
+      const slug = sp.get("go") || sp.get("slug") || sp.get("id");
+      if (slug) {
+        const ok = goToSlug(slug);
+        if (!ok) {
+          showToast("找不到 slug：" + slug);
+        }
+      } else if (window.location.hash && window.location.hash.length > 1) {
+        const h = decodeURIComponent(window.location.hash.slice(1));
+        const ok = goToSlug(h);
+        if (!ok) {
+          showToast("找不到 slug：" + h);
+        }
+      }
+    }
+
+    // Init
+    setupCategories();
+    render(BENCHMARKS);
+
+    // Events
+    qEl.addEventListener("input", refresh);
+    catEl.addEventListener("change", refresh);
+
+    cardsEl.addEventListener("click", async (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      const act = btn.dataset.act;
+      if (act === "open") {
+        const url = btn.dataset.url;
+        window.open(url, "_blank", "noopener,noreferrer");
+      } else if (act === "copy") {
+        const slug = btn.dataset.slug;
+        const link = buildDirectLink(slug);
+        const ok = await copyText(link);
+        showToast(ok ? "已複製跳轉連結 ✅" : "複製失敗");
+      } else if (act === "copy-url") {
+        const url = btn.dataset.url;
+        const ok = await copyText(url);
+        showToast(ok ? "已複製 URL ✅" : "複製失敗");
+      }
+    });
+
+    // Redirect last, so the page still works even if blocked by browser policies
+    tryAutoRedirect();
+  </script>
+</body>
+</html>
