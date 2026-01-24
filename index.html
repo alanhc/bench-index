@@ -264,6 +264,7 @@
             <div class="badges">${tags}</div>
             <div class="actions">
               <button class="primary" data-act="open" data-url="${it.url}">開啟</button>
+              <button data-act="open-self" data-url="${it.url}">原地跳轉</button>
               <button data-act="copy" data-slug="${it.slug}">複製跳轉連結</button>
               <button data-act="copy-url" data-url="${it.url}">複製原始 URL</button>
             </div>
@@ -346,6 +347,9 @@
       if (act === "open") {
         const url = btn.dataset.url;
         window.open(url, "_blank", "noopener,noreferrer");
+      } else if (act === "open-self") {
+        const url = btn.dataset.url;
+        window.location.href = url;
       } else if (act === "copy") {
         const slug = btn.dataset.slug;
         const link = buildDirectLink(slug);
