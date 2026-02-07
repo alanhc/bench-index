@@ -255,30 +255,26 @@ const BENCHMARKS = [
     "slug": "theinfo-dev-gpu-benchmark"
   },
   {
-    "title": "WebGL Aquarium",
-    "url": "https://webglsamples.org/aquarium/aquarium.html",
-    "category": "GPU / WebGL",
-    "tags": [
-      "aquarium",
-      "webgl"
-    ],
-    "slug": "webglsamples-org-aquarium-aquarium-html"
-  },
-  {
-    "title": "YouTube – VzoqgEsmUjY",
+    "title": "Motorcycle 4K 120fps | HDR",
     "url": "https://www.youtube.com/watch?v=VzoqgEsmUjY",
     "category": "Video",
     "tags": [
-      "youtube"
+      "youtube",
+      "4k",
+      "hdr",
+      "120fps"
     ],
     "slug": "www-youtube-com-watch-v-vzoqgesmujy"
   },
   {
-    "title": "YouTube – rFVpSwgCkCo",
+    "title": "Hawaii in 8K | HDR 60FPS",
     "url": "https://www.youtube.com/watch?v=rFVpSwgCkCo",
     "category": "Video",
     "tags": [
-      "youtube"
+      "youtube",
+      "8k",
+      "hdr",
+      "60fps"
     ],
     "slug": "www-youtube-com-watch-v-rfvpswgckco"
   },
@@ -330,5 +326,28 @@ const BENCHMARKS = [
       "tfjs"
     ],
     "slug": "tfjs-benchmarks-web-app-local-benchmark"
+  },
+  {
+    "title": "alanhc – VAD Bench",
+    "url": "https://alanhc.github.io/vad-bench/",
+    "category": "AI / Web",
+    "tags": [
+      "alanhc",
+      "vad",
+      "ai",
+      "wasm"
+    ],
+    "slug": "alanhc-github-io-vad-bench"
+  },
+  {
+    "title": "WebGL Aquarium (Fishtank)",
+    "url": "https://webglsamples.org/aquarium/aquarium.html",
+    "category": "GPU / WebGL",
+    "tags": [
+      "aquarium",
+      "webgl",
+      "fishtank"
+    ],
+    "slug": "webglsamples-org-aquarium-aquarium-html-fishtank"
   }
 ];
