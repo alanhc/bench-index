@@ -200,6 +200,12 @@
       background: rgba(122, 162, 255, .10);
     }
 
+    .badge.type {
+      border-color: rgba(74, 222, 128, .35);
+      background: rgba(74, 222, 128, .10);
+      color: #a3e6be;
+    }
+
     .actions {
       margin-top: 12px;
       display: flex;
@@ -273,6 +279,50 @@
       color: var(--accent);
       font-weight: bold;
     }
+
+    .type-filters {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .filter-group {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .filter-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .filter-btn {
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, .06);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .filter-btn:hover {
+      background: rgba(255, 255, 255, .12);
+      color: var(--text);
+    }
+
+    .filter-btn.active {
+      background: rgba(74, 222, 128, .15);
+      border-color: rgba(74, 222, 128, .4);
+      color: #4ade80;
+    }
   </style>
 </head>
 
@@ -288,7 +338,8 @@
         </div>
       </div>
       <div style="color: var(--muted); font-size: 12px; margin-top: 4px;" data-i18n="header_hint">支援
-        <code>?go=slug</code> / <code>#slug</code> 直接跳轉</div>
+        <code>?go=slug</code> / <code>#slug</code> 直接跳轉
+      </div>
       <div class="sub" data-i18n="header_sub">把你常用的 WebGL / WebGPU / JS / WASM / AI benchmark 集中在一頁，並提供「可分享的直接跳轉連結」。
       </div>
     </div>
@@ -298,9 +349,14 @@
     <section class="controls">
       <input id="q" class="input" data-i18n-placeholder="search_placeholder"
         placeholder="搜尋：名稱 / 網域 / tag（例如 webgpu、wasm、youtube）" autocomplete="off" />
-      <select id="cat" class="select">
-        <option value="" data-i18n="cat_all">全部分類</option>
-      </select>
+      <div class="filter-group">
+        <label class="filter-label" data-i18n="cat_label">Categories:</label>
+        <div id="cat-filters" class="type-filters"></div>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" data-i18n="type_label">Types:</label>
+        <div id="type-filters" class="type-filters"></div>
+      </div>
     </section>
 
     <section class="note" id="note">
@@ -308,7 +364,8 @@
         <div data-i18n="note_title">📌 直接跳轉方式：</div>
         <div><span data-i18n="note_eg1">例如</span> <code>?go=browserleaks-com-webgl</code></div>
         <div><span data-i18n="note_eg2">或用</span> <code>#slug</code> <span data-i18n="note_eg1">例如</span>
-          <code>#browserleaks-com-webgl</code></div>
+          <code>#browserleaks-com-webgl</code>
+        </div>
       </div>
       <div style="margin-top:8px; color: var(--muted);" data-i18n="note_desc">
         你也可以在每張卡片按「複製跳轉連結」，把連結丟給 QA / 同事，點進去就會自動導到目標頁面。
@@ -331,8 +388,11 @@
     const $$ = (sel) => document.querySelectorAll(sel);
     const cardsEl = $("#cards");
     const qEl = $("#q");
-    const catEl = $("#cat");
+    const catFiltersEl = $("#cat-filters");
+    const typeFiltersEl = $("#type-filters");
     const toastEl = $("#toast");
+    const selectedTypes = new Set();
+    const selectedCats = new Set();
 
     const TRANSLATIONS = {
       "zh-TW": {
@@ -483,14 +543,26 @@
       return (s ?? "").toString().trim().toLowerCase();
     }
 
-    function matches(item, q, cat) {
-      if (cat && item.category !== cat) return false;
+    function matches(item, q) {
+      // Category Filter Logic (OR)
+      if (selectedCats.size > 0) {
+        if (!selectedCats.has(item.category)) return false;
+      }
+
+      // Type Filter Logic (OR)
+      if (selectedTypes.size > 0) {
+        const itemTypes = item.types || [];
+        const hasMatch = itemTypes.some(t => selectedTypes.has(t));
+        if (!hasMatch) return false;
+      }
+
       if (!q) return true;
       const hay = [
         item.title,
         item.url,
         item.category,
         ...(item.tags || []),
+        ...(item.types || []),
         item.slug
       ].map(normalize).join(" ");
       return hay.includes(q);
@@ -504,12 +576,13 @@
       cardsEl.innerHTML = list.map((it) => {
         const host = hostOf(it.url);
         const tags = (it.tags || []).map(t => `<span class="badge">${t}</span>`).join("");
+        const types = (it.types || []).map(t => `<span class="badge type">${t}</span>`).join(" ");
         return `
           <article class="card" data-slug="${it.slug}">
             <div class="row">
               <div>
                 <h3 class="name">${it.title}</h3>
-                <div class="meta">${host} · <span class="badge cat">${it.category}</span></div>
+                <div class="meta">${host} · <span class="badge cat">${it.category}</span> · ${types}</div>
               </div>
             </div>
             <div class="badges">${tags}</div>
@@ -526,19 +599,51 @@
 
     function refresh() {
       const q = normalize(qEl.value);
-      const cat = catEl.value;
-      const filtered = BENCHMARKS.filter(it => matches(it, q, cat));
+      const filtered = BENCHMARKS.filter(it => matches(it, q));
       render(filtered);
     }
 
-    function setupCategories() {
+    function setupFilters() {
+      // Setup Category Buttons
       const cats = Array.from(new Set(BENCHMARKS.map(b => b.category))).sort();
-      for (const c of cats) {
-        const opt = document.createElement("option");
-        opt.value = c;
-        opt.textContent = c;
-        catEl.appendChild(opt);
-      }
+      cats.forEach(c => {
+        const btn = document.createElement("button");
+        btn.className = "filter-btn";
+        btn.textContent = c;
+        btn.onclick = () => {
+          if (selectedCats.has(c)) {
+            selectedCats.delete(c);
+            btn.classList.remove("active");
+          } else {
+            selectedCats.add(c);
+            btn.classList.add("active");
+          }
+          refresh();
+        };
+        catFiltersEl.appendChild(btn);
+      });
+
+      // Setup Type Buttons
+      const allTypes = new Set();
+      BENCHMARKS.forEach(b => (b.types || []).forEach(t => allTypes.add(t)));
+      const sortedTypes = Array.from(allTypes).sort();
+
+      sortedTypes.forEach(type => {
+        const btn = document.createElement("button");
+        btn.className = "filter-btn";
+        btn.textContent = type;
+        btn.onclick = () => {
+          if (selectedTypes.has(type)) {
+            selectedTypes.delete(type);
+            btn.classList.remove("active");
+          } else {
+            selectedTypes.add(type);
+            btn.classList.add("active");
+          }
+          refresh();
+        };
+        typeFiltersEl.appendChild(btn);
+      });
     }
 
     async function copyText(t) {
@@ -585,12 +690,11 @@
 
     // Init
     initLanguage();
-    setupCategories();
+    setupFilters();
     render(BENCHMARKS);
 
     // Events
     qEl.addEventListener("input", refresh);
-    catEl.addEventListener("change", refresh);
 
     cardsEl.addEventListener("click", async (e) => {
       const btn = e.target.closest("button");
